@@ -1,0 +1,69 @@
+ls, dir เช็คไฟล์ทั้งหมด
+cd ชื่อไฟล์ (เข้าถึงชื่อไฟล์นั้นๆ)
+cd .. ย้อนกลับ 1 ไฟล์
+
+
+DOCKER
+Day 1
+docker run nginx # เปิดใช้งาน nginx
+docker ps --all # แสดง Docker ที่กำลังทำงานอยู่
+docker stop CONTAINER ID or name # หยุดการทำงานของ CONTAINER 
+docker rm CONTAINER ID or name # ลบตัว CONTAINER (แต่ต้องหยุดการทำงานก่อนลบ)
+docker run --name mrginx -p 8888:80 nginx # การสร้าง CONTAINER และรันแบบค้าง
+docker run --name mrginx -d -p 8888:80 nginx # การสร้าง CONTAINER และรันแบบไม่ค้าง
+docker ps # เช็คการทำงานของ CONTAINER
+docker pull mysql:5.7 # เป็น images ตัวหนึ่ง
+docker pull phpmyadmin/phpmyadmin # เป็น images ตัวหนึ่ง
+docker images # เช็ค images ทั้งหมด
+docker network create web # สร้าง network ชื่อ web
+docker network ls # เช็ค network ว่ามีอยู่มั้ย
+docker run --name mysql --network web -e MYSQL_ROOT_PASSWORD=1111 -e MYSQL_DATABASE=web_db -e MYSQL_USER=wordpress -e MYSQL_PASSWORD=wordpress -d mysql:5.7
+docker run --name pma --network web -p 8888:80 -e PMA_ARBITRARY=1 -d phpmyadmin/phpmyadmin
+
+
+Day 2
+docker-compose
+
+version: '3.7'
+
+services: # Services 1
+  db: # Container 1
+    image: mysql:latest # กำหนดเป็น Version ล่าสุด
+    container_name: mysql_db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: webdb # ชื่อของ DB Base
+    ports: # Port ตัวหลังคือเอาไว้ชี้ไปที่ Container
+      - "8700:3306"
+    volumes: 
+      - mysql_data:/var/lib/mysql # ที่อยู่ของ Path ที่เก็บไฟล์
+    networks:
+      - weblab700 
+
+  phpmyadmin: # Container 1
+    image: phpmyadmin/phpmyadmin:latest # ชื่อ images
+    container_name: phpmyadmin # ชื่อ Container
+    environment:
+      PMA_HOST: db 
+      PMA_PORT: 3306 # Port ของ Container ตัวนี้
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8701:80" 
+    depends_on:
+      - db # ต้องรอการทำงานของ Container ตัวบนให้เสร็จก่อน ถึงจะมา Run Container ตัวนี้
+    networks:
+      - weblab700
+
+networks: # Services 2
+  weblab700: 
+    driver: bridge
+
+volumes: # ใช้ในการจัดเก็บข้อมูล Services 3
+  mysql_data:
+    driver: local
+
+TERMINAL คำสั่ง
+docker-compose up # Run Server และสร้างไฟล์ขึ้นมา
+docker-compose down # หยุดการ Run Server และ Remove ไฟล์
